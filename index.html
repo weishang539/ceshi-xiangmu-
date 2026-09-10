@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>个人工作台</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="public/styles.css" />
 </head>
 <body>
   <div class="app">
@@ -23,6 +23,8 @@
         </button>
       </div>
     </header>
+
+    <p id="modeBanner" class="mode-banner" hidden>演示模式：数据保存在浏览器本地（GitHub Pages 不支持后端服务）</p>
 
     <section class="stats" id="stats">
       <div class="stat-card">
@@ -64,7 +66,6 @@
     </div>
   </div>
 
-  <!-- 任务表单弹窗 -->
   <dialog class="modal" id="taskModal">
     <form class="modal__form" id="taskForm">
       <div class="modal__header">
@@ -104,6 +105,6 @@
     </form>
   </dialog>
 
-  <script src="app.js"></script>
+  <script src="public/app.js"></script>
 </body>
 </html>

@@ -25,12 +25,19 @@
       <p class="login-error" id="loginError" hidden></p>
       <button type="submit" class="btn btn--primary btn--block">登 录</button>
     </form>
-    <p class="login-hint">默认账号：admin / admin123</p>
-    <a href="/" class="login-back">← 返回前台工作台</a>
+    <p class="login-hint" id="loginHint">默认账号：admin / admin123</p>
+    <p class="login-error" id="staticNotice" hidden style="color:var(--warning,#f0ad4e)">GitHub Pages 为静态托管，后台需本地运行 <code>npm start</code> 后访问</p>
+    <a href="../index.html" class="login-back">← 返回前台工作台</a>
   </div>
   <script>
+    if (location.hostname.endsWith('github.io')) {
+      document.getElementById('staticNotice').hidden = false;
+      document.getElementById('loginHint').hidden = true;
+      document.getElementById('loginForm').querySelector('button[type=submit]').disabled = true;
+    }
+
     const token = localStorage.getItem('admin_token');
-    if (token) location.href = '/admin/';
+    if (token && !location.hostname.endsWith('github.io')) location.href = 'index.html';
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -49,7 +56,7 @@
         if (!res.ok) throw new Error(data.error || '登录失败');
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_user', JSON.stringify(data.user));
-        location.href = '/admin/';
+        location.href = 'index.html';
       } catch (err) {
         errEl.textContent = err.message;
         errEl.hidden = false;

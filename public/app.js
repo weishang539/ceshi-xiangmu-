@@ -10,10 +10,13 @@ const PRIORITY_LABELS = {
   high: '高',
 };
 
+const STORAGE_KEY = 'workbench_tasks';
+
 let tasks = [];
 let currentFilter = 'all';
 let searchQuery = '';
 let editingId = null;
+let useLocal = false;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -23,6 +26,60 @@ const emptyState = $('#emptyState');
 const taskModal = $('#taskModal');
 const taskForm = $('#taskForm');
 const modalTitle = $('#modalTitle');
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function getAllLocalTasks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalTasks(all) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+}
+
+function seedLocalTasks() {
+  const all = getAllLocalTasks();
+  if (all.length > 0) return;
+  const now = new Date().toISOString();
+  saveLocalTasks([
+    { id: genId(), title: '整理本周工作计划', description: '列出优先级最高的 3 项任务', status: 'todo', priority: 'high', createdAt: now, updatedAt: now },
+    { id: genId(), title: '回复客户邮件', description: '', status: 'doing', priority: 'medium', createdAt: now, updatedAt: now },
+    { id: genId(), title: '提交月度总结', description: '已完成并发送给主管', status: 'done', priority: 'low', createdAt: now, updatedAt: now },
+  ]);
+}
+
+function filterLocalTasks(all) {
+  return all
+    .filter((t) => {
+      if (currentFilter !== 'all' && t.status !== currentFilter) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return t.title.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+}
+
+async function detectMode() {
+  if (location.hostname.endsWith('github.io')) {
+    useLocal = true;
+    return;
+  }
+  try {
+    const res = await fetch('/api/tasks/stats', { signal: AbortSignal.timeout(2000) });
+    useLocal = !res.ok;
+  } catch {
+    useLocal = true;
+  }
+}
 
 async function api(url, options = {}) {
   const res = await fetch(url, {
@@ -35,13 +92,30 @@ async function api(url, options = {}) {
 }
 
 async function loadTasks() {
+  if (useLocal) {
+    seedLocalTasks();
+    tasks = filterLocalTasks(getAllLocalTasks());
+    return;
+  }
   const params = new URLSearchParams();
   if (currentFilter !== 'all') params.set('status', currentFilter);
   if (searchQuery) params.set('search', searchQuery);
   tasks = await api(`/api/tasks?${params}`);
 }
 
-async function loadStats() {
+function updateStats() {
+  const source = useLocal ? getAllLocalTasks() : null;
+  if (useLocal) {
+    $('#statTotal').textContent = source.length;
+    $('#statTodo').textContent = source.filter((t) => t.status === 'todo').length;
+    $('#statDoing').textContent = source.filter((t) => t.status === 'doing').length;
+    $('#statDone').textContent = source.filter((t) => t.status === 'done').length;
+    return;
+  }
+  loadStatsFromApi();
+}
+
+async function loadStatsFromApi() {
   const stats = await api('/api/tasks/stats');
   $('#statTotal').textContent = stats.total;
   $('#statTodo').textContent = stats.todo;
@@ -50,6 +124,7 @@ async function loadStats() {
 }
 
 async function loadSiteName() {
+  if (useLocal) return;
   try {
     const { siteName } = await api('/api/settings/public');
     if (siteName) {
@@ -69,8 +144,9 @@ function formatDate(iso) {
   });
 }
 
-function renderTasks() {
-  loadStats();
+async function renderTasks() {
+  if (useLocal) updateStats();
+  else await loadStatsFromApi();
 
   if (tasks.length === 0) {
     taskList.innerHTML = '';
@@ -149,7 +225,17 @@ async function saveTask(e) {
     priority: $('#taskPriority').value,
   };
 
-  if (editingId) {
+  if (useLocal) {
+    const all = getAllLocalTasks();
+    const now = new Date().toISOString();
+    if (editingId) {
+      const idx = all.findIndex((t) => t.id === editingId);
+      if (idx !== -1) all[idx] = { ...all[idx], ...body, updatedAt: now };
+    } else {
+      all.unshift({ id: genId(), ...body, createdAt: now, updatedAt: now });
+    }
+    saveLocalTasks(all);
+  } else if (editingId) {
     await api(`/api/tasks/${editingId}`, { method: 'PUT', body: JSON.stringify(body) });
   } else {
     await api('/api/tasks', { method: 'POST', body: JSON.stringify(body) });
@@ -164,22 +250,42 @@ async function cycleStatus(id) {
   if (!task) return;
   const order = ['todo', 'doing', 'done'];
   const next = order[(order.indexOf(task.status) + 1) % order.length];
-  await api(`/api/tasks/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ ...task, status: next }),
-  });
+
+  if (useLocal) {
+    const all = getAllLocalTasks();
+    const idx = all.findIndex((t) => t.id === id);
+    if (idx !== -1) {
+      all[idx].status = next;
+      all[idx].updatedAt = new Date().toISOString();
+      saveLocalTasks(all);
+    }
+  } else {
+    await api(`/api/tasks/${id}`, { method: 'PUT', body: JSON.stringify({ ...task, status: next }) });
+  }
   await refresh();
 }
 
 async function deleteTask(id) {
   if (!confirm('确定删除这条任务吗？')) return;
-  await api(`/api/tasks/${id}`, { method: 'DELETE' });
+
+  if (useLocal) {
+    saveLocalTasks(getAllLocalTasks().filter((t) => t.id !== id));
+  } else {
+    await api(`/api/tasks/${id}`, { method: 'DELETE' });
+  }
   await refresh();
 }
 
-function init() {
-  loadSiteName();
-  refresh();
+function showModeBanner() {
+  const banner = $('#modeBanner');
+  if (banner && useLocal) banner.hidden = false;
+}
+
+async function init() {
+  await detectMode();
+  showModeBanner();
+  await loadSiteName();
+  await refresh();
 
   $('#btnNewTask').addEventListener('click', () => openModal());
   $('#btnCloseModal').addEventListener('click', closeModal);
