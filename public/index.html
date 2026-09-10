@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人工作台</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__logo">◆</span>
+        <div>
+          <h1>个人工作台</h1>
+          <p class="header__subtitle">记录任务 · 跟踪进度</p>
+        </div>
+      </div>
+      <div class="header__actions">
+        <a href="/admin/login.html" class="btn btn--ghost">后台管理</a>
+        <button type="button" class="btn btn--primary" id="btnNewTask">
+          <span>+</span> 新建任务
+        </button>
+      </div>
+    </header>
+
+    <section class="stats" id="stats">
+      <div class="stat-card">
+        <span class="stat-card__value" id="statTotal">0</span>
+        <span class="stat-card__label">全部</span>
+      </div>
+      <div class="stat-card stat-card--todo">
+        <span class="stat-card__value" id="statTodo">0</span>
+        <span class="stat-card__label">待办</span>
+      </div>
+      <div class="stat-card stat-card--doing">
+        <span class="stat-card__value" id="statDoing">0</span>
+        <span class="stat-card__label">进行中</span>
+      </div>
+      <div class="stat-card stat-card--done">
+        <span class="stat-card__value" id="statDone">0</span>
+        <span class="stat-card__label">已完成</span>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <div class="search">
+        <input type="search" id="searchInput" placeholder="搜索任务..." />
+      </div>
+      <div class="filters" id="filters">
+        <button type="button" class="filter-btn filter-btn--active" data-filter="all">全部</button>
+        <button type="button" class="filter-btn" data-filter="todo">待办</button>
+        <button type="button" class="filter-btn" data-filter="doing">进行中</button>
+        <button type="button" class="filter-btn" data-filter="done">已完成</button>
+      </div>
+    </section>
+
+    <main class="task-list" id="taskList"></main>
+
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="empty-state__icon">📋</div>
+      <h2>还没有任务</h2>
+      <p>点击「新建任务」开始记录你的工作</p>
+    </div>
+  </div>
+
+  <!-- 任务表单弹窗 -->
+  <dialog class="modal" id="taskModal">
+    <form class="modal__form" id="taskForm">
+      <div class="modal__header">
+        <h2 id="modalTitle">新建任务</h2>
+        <button type="button" class="modal__close" id="btnCloseModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal__body">
+        <label class="field">
+          <span>任务标题</span>
+          <input type="text" id="taskTitle" required maxlength="100" placeholder="例如：完成周报" />
+        </label>
+        <label class="field">
+          <span>描述（可选）</span>
+          <textarea id="taskDesc" rows="3" maxlength="500" placeholder="补充说明..."></textarea>
+        </label>
+        <label class="field">
+          <span>状态</span>
+          <select id="taskStatus">
+            <option value="todo">待办</option>
+            <option value="doing">进行中</option>
+            <option value="done">已完成</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>优先级</span>
+          <select id="taskPriority">
+            <option value="low">低</option>
+            <option value="medium" selected>中</option>
+            <option value="high">高</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" id="btnCancel">取消</button>
+        <button type="submit" class="btn btn--primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

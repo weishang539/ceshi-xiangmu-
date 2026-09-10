@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台管理 - 个人工作台</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <span>◆</span> 管理后台
+      </div>
+      <nav class="sidebar__nav" id="sidebarNav">
+        <button type="button" class="nav-item nav-item--active" data-page="dashboard">📊 仪表盘</button>
+        <button type="button" class="nav-item" data-page="tasks">📋 任务管理</button>
+        <button type="button" class="nav-item" data-page="users">👤 用户管理</button>
+        <button type="button" class="nav-item" data-page="logs">📝 操作日志</button>
+        <button type="button" class="nav-item" data-page="settings">⚙️ 系统设置</button>
+        <button type="button" class="nav-item" data-page="profile">🔑 个人中心</button>
+      </nav>
+      <div class="sidebar__footer">
+        <a href="/" class="sidebar__link">前台工作台</a>
+        <button type="button" class="sidebar__logout" id="btnLogout">退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h2 id="pageTitle">仪表盘</h2>
+        <div class="topbar__user">
+          <span id="currentUserName">管理员</span>
+        </div>
+      </header>
+
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <dialog class="modal" id="modal">
+    <form class="modal__form" id="modalForm">
+      <div class="modal__header">
+        <h3 id="modalTitle">编辑</h3>
+        <button type="button" class="modal__close" id="btnCloseModal">×</button>
+      </div>
+      <div class="modal__body" id="modalBody"></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" id="btnCancel">取消</button>
+        <button type="submit" class="btn btn--primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="admin.js"></script>
+</body>
+</html>

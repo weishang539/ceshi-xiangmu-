@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台登录 - 个人工作台</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <div class="login-card__header">
+      <span class="login-card__logo">◆</span>
+      <h1>后台管理系统</h1>
+      <p>个人工作台管理端</p>
+    </div>
+    <form id="loginForm" class="login-form">
+      <label class="field">
+        <span>用户名</span>
+        <input type="text" id="username" value="admin" required autocomplete="username" />
+      </label>
+      <label class="field">
+        <span>密码</span>
+        <input type="password" id="password" value="admin123" required autocomplete="current-password" />
+      </label>
+      <p class="login-error" id="loginError" hidden></p>
+      <button type="submit" class="btn btn--primary btn--block">登 录</button>
+    </form>
+    <p class="login-hint">默认账号：admin / admin123</p>
+    <a href="/" class="login-back">← 返回前台工作台</a>
+  </div>
+  <script>
+    const token = localStorage.getItem('admin_token');
+    if (token) location.href = '/admin/';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('loginError');
+      errEl.hidden = true;
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '登录失败');
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+        location.href = '/admin/';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>

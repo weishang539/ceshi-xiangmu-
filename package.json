@@ -1,0 +1,13 @@
+{
+  "name": "workbench",
+  "version": "1.0.0",
+  "description": "个人工作台与后台管理系统",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
